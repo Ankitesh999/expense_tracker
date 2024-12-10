@@ -99,6 +99,7 @@ def pie_chart():
 def main():    
     st.title("Expense Tracker")
 
+    # Sidebar Menu
     menu = ["Add Expense", "View Expenses", "Edit Expense", "Delete Expense", "Analysis", "Visualize Data"]
     choice = st.sidebar.selectbox("Menu", menu)
 
@@ -121,7 +122,33 @@ def main():
 
     elif choice == "View Expenses":
         st.subheader("All Expenses")
-        st.dataframe(dataframe())
+
+        df = dataframe()
+        #Table for expenses
+        if dataframe().empty:
+            st.warning("No expenses found, start adding expenses!")
+        else:
+             # Search/Filter Options
+            with st.expander("Filter Options"):
+                category_filter = st.selectbox("Filter by Category", options=["All"] + df["category"].unique().tolist(), index=0)
+                payment_filter = st.selectbox("Filter by Payment Method", options=["All"] + df["payment_method"].unique().tolist(), index=0)
+                if category_filter != "All":
+                    df = df[df["category"] == category_filter]
+                if payment_filter != "All":
+                    df = df[df["payment_method"] == payment_filter]
+            
+            # Display Data
+            st.dataframe(df)
+            
+            # Summary Stats
+            st.write("### Summary")
+            st.write(f"**Total Expenses:** ₹{df['amount'].sum():,.2f}")
+            st.write(f"**Average Expense Amount:** ₹{df['amount'].mean():,.2f}")
+            st.write(f"**Number of Expenses:** {df.shape[0]}")
+
+            # Export Option
+            csv = df.to_csv(index=False)
+            st.download_button(label="Download Data as CSV", data=csv, file_name="expenses.csv", mime="text/csv")
 
     elif choice == "Edit Expense":
         st.subheader("Edit an Expense")
@@ -164,8 +191,7 @@ def main():
         st.subheader("Expense Analysis")
 
     elif choice == "Visualize Data":
-        st.subheader("Expense Visualization")
-        # Create charts using matplotlib or Streamlit's st.bar_chart, st.line_chart, etc.
+        st.subheader("Charts and Visualizations")
         pie_chart()
         
 
